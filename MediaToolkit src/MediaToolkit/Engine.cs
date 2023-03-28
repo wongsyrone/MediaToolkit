@@ -42,7 +42,7 @@
         /// <param name="inputFile">    Input file. </param>
         /// <param name="outputFile">   Output file. </param>
         /// <param name="options">      Conversion options. </param>
-        public Task Convert(MediaFile inputFile, MediaFile outputFile, ConversionOptions options)
+        public Task<ProcessHelperResult> Convert(MediaFile inputFile, MediaFile outputFile, ConversionOptions options)
         {
             EngineParameters engineParams = new EngineParameters
                 {
@@ -62,7 +62,7 @@
         /// </summary>
         /// <param name="inputFile">    Input file. </param>
         /// <param name="outputFile">   Output file. </param>
-        public Task Convert(MediaFile inputFile, MediaFile outputFile)
+        public Task<ProcessHelperResult> Convert(MediaFile inputFile, MediaFile outputFile)
         {
             EngineParameters engineParams = new EngineParameters
                 {
@@ -77,7 +77,7 @@
         /// <summary>   Event queue for all listeners interested in convertProgress events. </summary>
         public event EventHandler<ConvertProgressEventArgs> ConvertProgressEvent;
 
-        public void CustomCommand(string ffmpegCommand)
+        public Task<ProcessHelperResult> CustomCommand(string ffmpegCommand)
         {
             if (ffmpegCommand.IsNullOrWhiteSpace())
             {
@@ -86,7 +86,7 @@
 
             EngineParameters engineParameters = new EngineParameters { CustomArguments = ffmpegCommand };
 
-            this.StartFFmpegProcess(engineParameters).Wait();
+            return this.StartFFmpegProcess(engineParameters);
         }
 
         /// -------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@
         ///     <para> Retrieve media metadata</para>
         /// </summary>
         /// <param name="inputFile">    Retrieves the metadata for the input file. </param>
-        public Task GetMetadata(MediaFile inputFile)
+        public Task<ProcessHelperResult> GetMetadata(MediaFile inputFile)
         {
             EngineParameters engineParams = new EngineParameters
                 {
@@ -110,7 +110,7 @@
         /// <param name="inputFile">    Video file. </param>
         /// <param name="outputFile">   Image file. </param>
         /// <param name="options">      Conversion options. </param>
-        public Task GetThumbnail(MediaFile inputFile, MediaFile outputFile, ConversionOptions options)
+        public Task<ProcessHelperResult> GetThumbnail(MediaFile inputFile, MediaFile outputFile, ConversionOptions options)
         {
             EngineParameters engineParams = new EngineParameters
                 {
@@ -125,7 +125,7 @@
         
         #region Private method - Helpers
 
-        private Task FFmpegEngine(EngineParameters engineParameters)
+        private Task<ProcessHelperResult> FFmpegEngine(EngineParameters engineParameters)
         {
             if (!engineParameters.InputFile.Filename.StartsWith("http://") && !File.Exists(engineParameters.InputFile.Filename))
             {
@@ -435,7 +435,7 @@
         ///     occurs.
         /// </exception>
         /// <param name="engineParameters"> The engine parameters. </param>
-        private async Task StartFFmpegProcess(EngineParameters engineParameters)
+        private async Task<ProcessHelperResult> StartFFmpegProcess(EngineParameters engineParameters)
         {
             
             ProcessStartInfo processStartInfo = engineParameters.HasCustomArguments 
@@ -450,6 +450,7 @@
                     exitCode + ": " + ret.StdErr.Substring(0, 1000),
                     ret.exp);
             }
+            return ret;
             // using (this.FFmpegProcess = Process.Start(processStartInfo))
             // {
             //     
