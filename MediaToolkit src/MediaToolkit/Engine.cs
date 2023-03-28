@@ -381,10 +381,19 @@
                 // Process completion = exit AND stdout (if defined) AND stderr (if defined)
                 Task processCompletionTask = Task.WhenAll(processTasks);
 
-                // Task to wait for exit OR timeout (if defined)
-                Task<Task> awaitingTask = timeoutMs.HasValue
-                    ? Task.WhenAny(Task.Delay(timeoutMs.Value), processCompletionTask, stdErrProcessGotExceptionEvent.Task)
-                    : Task.WhenAny(processCompletionTask, stdErrProcessGotExceptionEvent.Task);
+                // Task to wait for exit OR timeout (if defined) OR got exception
+                List<Task> tasks = new List<Task>
+                {
+                    processCompletionTask,
+                    stdErrProcessGotExceptionEvent.Task
+                };
+
+                if (timeoutMs.HasValue)
+                {
+                    tasks.Add(Task.Delay(timeoutMs.Value));
+                }
+
+                Task<Task> awaitingTask = Task.WhenAny(tasks);
 
                 // Let's now wait for something to end...
                 if ((await awaitingTask.ConfigureAwait(false)) == processCompletionTask)
