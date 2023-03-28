@@ -11,12 +11,10 @@
     using MediaToolkit.Properties;
     using MediaToolkit.Util;
 
-    public class EngineBase : IDisposable
+    public class EngineBase
     {
-        private bool isDisposed;
-
         /// <summary>   Used for locking the FFmpeg process to one thread. </summary>
-        private const string LockName = "MediaToolkit.Engine.LockName";
+        private const string LockName = "Mod.MediaToolkit.Engine.LockName";
 
         private const string DefaultFFmpegFilePath = @"/MediaToolkit/ffmpeg.exe";
 
@@ -25,10 +23,7 @@
 
         /// <summary>   The Mutex. </summary>
         protected readonly Mutex Mutex;
-
-        /// <summary>   The ffmpeg process. </summary>
-        protected Process FFmpegProcess;
-
+        
 
          protected EngineBase()
             : this(ConfigurationManager.AppSettings["mediaToolkit.ffmpeg.path"])
@@ -43,7 +38,6 @@
         protected EngineBase(string ffMpegPath)
         {
             this.Mutex = new Mutex(false, LockName);
-            this.isDisposed = false;
 
             if (ffMpegPath.IsNullOrWhiteSpace())
             {
@@ -65,6 +59,8 @@
                 Process.GetProcessesByName(Resources.FFmpegProcessName)
                        .ForEach(process =>
                        {
+                           // 只杀掉我们开启的进程
+                           if (process.MainModule.FileName != this.FFmpegFilePath) return;
                            process.Kill();
                            process.WaitForExit();
                        });
@@ -111,34 +107,6 @@
             {
                 compressedStream.CopyTo(fileStream);
             }
-        }
-
-
-
-        ///-------------------------------------------------------------------------------------------------
-        /// <summary>
-        ///     Performs application-defined tasks associated with freeing, releasing, or resetting
-        ///     unmanaged resources.
-        /// </summary>
-        /// <remarks>   Aydin Aydin, 30/03/2015. </remarks>
-        public virtual void Dispose()
-        {
-            this.Dispose(true);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposing || this.isDisposed)
-            {
-                return;
-            }
-
-            if(FFmpegProcess != null)
-            {
-                this.FFmpegProcess.Dispose();
-            }            
-            this.FFmpegProcess = null;
-            this.isDisposed = true;
         }
     }
 }

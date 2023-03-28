@@ -61,20 +61,15 @@ namespace MediaToolkit.Test
             var inputFile = new MediaFile { Filename = _inputFilePath };
             var outputFile = new MediaFile { Filename = outputPath };
 
-            using (var engine = new Engine())
-            {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.GetMetadata(inputFile).Wait();
+            ConversionOptions options = new ConversionOptions();
+            options.CutMedia(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(25));
+            engine.Convert(inputFile, outputFile, options).Wait();
+            engine.GetMetadata(outputFile).Wait();
 
-                engine.GetMetadata(inputFile);
-
-                ConversionOptions options = new ConversionOptions();
-                options.CutMedia(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(25));
-
-                engine.Convert(inputFile, outputFile, options);
-                engine.GetMetadata(outputFile);
-            }
-            
             Assert.That(File.Exists(outputPath));
             // Input file is 33 seconds long, seeking to the 30th second and then 
             // attempting to cut another 25 seconds isn't possible as there's only 3 seconds
@@ -89,24 +84,19 @@ namespace MediaToolkit.Test
             var inputFile = new MediaFile { Filename = _inputFilePath };
             var outputFile = new MediaFile { Filename = outputPath };
 
-            using (var engine = new Engine())
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.GetMetadata(inputFile);
+            var options = new ConversionOptions();
+            options.SourceCrop = new CropRectangle()
             {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-
-                engine.GetMetadata(inputFile);
-
-                var options = new ConversionOptions();
-                options.SourceCrop = new CropRectangle()
-                {
-                    X = 100,
-                    Y = 100,
-                    Width = 50,
-                    Height = 50
-                };
-
-                engine.Convert(inputFile, outputFile, options);
-            }
+                X      = 100,
+                Y      = 100,
+                Width  = 50,
+                Height = 50
+            };
+            engine.Convert(inputFile, outputFile, options);
         }
 
         [TestCase]
@@ -123,19 +113,15 @@ namespace MediaToolkit.Test
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var localMediaToolkitFfMpeg = Path.Combine(localAppData, "MediaToolkit", "ffmpeg.exe");
 
-            using (var engine = new Engine(localMediaToolkitFfMpeg))
+            var engine = new Engine(localMediaToolkitFfMpeg);
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.GetMetadata(inputFile).Wait();
+            var options = new ConversionOptions
             {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-
-                engine.GetMetadata(inputFile);
-
-                var options = new ConversionOptions
-                {
-                    Seek = TimeSpan.FromSeconds(inputFile.Metadata.Duration.TotalSeconds / 2)
-                };
-                engine.GetThumbnail(inputFile, outputFile, options);
-            }
+                Seek = TimeSpan.FromSeconds(inputFile.Metadata.Duration.TotalSeconds / 2)
+            };
+            engine.GetThumbnail(inputFile, outputFile, options).Wait();
             Assert.That(File.Exists(outputPath));
         }
 
@@ -147,19 +133,15 @@ namespace MediaToolkit.Test
             var inputFile = new MediaFile { Filename = _inputUrlPath };
             var outputFile = new MediaFile { Filename = outputPath };
 
-            using (var engine = new Engine())
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.GetMetadata(inputFile).Wait();
+            var options = new ConversionOptions
             {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-
-                engine.GetMetadata(inputFile);
-
-                var options = new ConversionOptions
-                {
-                    Seek = TimeSpan.FromSeconds(inputFile.Metadata.Duration.TotalSeconds / 2)
-                };
-                engine.GetThumbnail(inputFile, outputFile, options);
-            }
+                Seek = TimeSpan.FromSeconds(inputFile.Metadata.Duration.TotalSeconds / 2)
+            };
+            engine.GetThumbnail(inputFile, outputFile, options).Wait();
         }
 
         [TestCase]
@@ -167,8 +149,8 @@ namespace MediaToolkit.Test
         {
             var inputFile = new MediaFile { Filename = _inputFilePath };
 
-            using (var engine = new Engine())
-                engine.GetMetadata(inputFile);
+            var engine = new Engine();
+            engine.GetMetadata(inputFile).Wait();
 
             Metadata inputMeta = inputFile.Metadata;
 
@@ -198,15 +180,12 @@ namespace MediaToolkit.Test
             var outputFile = new MediaFile { Filename = outputPath };
 
 
-            using (var engine = new Engine())
-            {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-
-                engine.Convert(inputFile, outputFile);
-                engine.GetMetadata(inputFile);
-                engine.GetMetadata(outputFile);
-            }
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.Convert(inputFile, outputFile).Wait();
+            engine.GetMetadata(inputFile).Wait();
+            engine.GetMetadata(outputFile).Wait();
 
             Metadata inputMeta = inputFile.Metadata;
             Metadata outputMeta = outputFile.Metadata;
@@ -224,15 +203,12 @@ namespace MediaToolkit.Test
             var outputFile = new MediaFile { Filename = outputPath };
 
 
-            using (var engine = new Engine())
-            {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-
-                engine.Convert(inputFile, outputFile);
-                engine.GetMetadata(inputFile);
-                engine.GetMetadata(outputFile);
-            }
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.Convert(inputFile, outputFile).Wait();
+            engine.GetMetadata(inputFile).Wait();
+            engine.GetMetadata(outputFile).Wait();
 
             Metadata inputMeta = inputFile.Metadata;
             Metadata outputMeta = outputFile.Metadata;
@@ -252,16 +228,12 @@ namespace MediaToolkit.Test
 
             var conversionOptions = new ConversionOptions { Target = Target.DVD, TargetStandard = TargetStandard.PAL };
 
-            using (var engine = new Engine())
-            {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-
-                engine.Convert(inputFile, outputFile, conversionOptions);
-
-                engine.GetMetadata(inputFile);
-                engine.GetMetadata(outputFile);
-            }
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.Convert(inputFile, outputFile, conversionOptions).Wait();
+            engine.GetMetadata(inputFile).Wait();
+            engine.GetMetadata(outputFile).Wait();
 
             PrintMetadata(inputFile.Metadata);
             PrintMetadata(outputFile.Metadata);
@@ -283,8 +255,8 @@ namespace MediaToolkit.Test
             };
 
 
-            using (var engine = new Engine())
-                engine.Convert(inputFile, outputFile, conversionOptions);
+            var engine = new Engine();
+            engine.Convert(inputFile, outputFile, conversionOptions).Wait();
         }
 
         [TestCase]
@@ -295,17 +267,14 @@ namespace MediaToolkit.Test
             var inputFile = new MediaFile { Filename = _inputFilePath };
             var outputFile = new MediaFile { Filename = outputPath };
 
-            using (var engine = new Engine())
-            {
-                engine.ConvertProgressEvent += engine_ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            var engine = new Engine();
+            engine.ConvertProgressEvent    += engine_ConvertProgressEvent;
+            engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
+            engine.Convert(inputFile, outputFile, new ConversionOptions { VideoSize = VideoSize.Custom, CustomHeight = 120 }).Wait();
+            engine.GetMetadata(inputFile).Wait();
+            engine.GetMetadata(outputFile).Wait();
 
-                engine.Convert(inputFile, outputFile, new ConversionOptions { VideoSize = VideoSize.Custom, CustomHeight = 120 });
-                engine.GetMetadata(inputFile);
-                engine.GetMetadata(outputFile);
-            }
-
-            Assert.AreEqual("214x120", outputFile.Metadata.VideoData.FrameSize);
+            Assert.AreEqual("214x120", outputFile.Metadata.VideoData.FrameSize);  // TODO: issue with regex parsing framesize
 
             PrintMetadata(inputFile.Metadata);
             PrintMetadata(outputFile.Metadata);

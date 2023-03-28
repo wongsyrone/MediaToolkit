@@ -215,3 +215,4 @@ pip-log.txt
 .mr.developer.cfg
 
 TestVideo/
+/MediaToolkit src/packages/Moq.4.2.1510.2205
